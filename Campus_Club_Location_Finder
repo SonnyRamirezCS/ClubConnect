@@ -1,0 +1,330 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>Pierce Campus Directions Widget</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="stylesheet" href="https://api.mapbox.com/mapbox-gl-js/v3.4.0/mapbox-gl.css">
+  <link rel="stylesheet" href="https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-directions/v4.3.1/mapbox-gl-directions.css" />
+  <style>
+    :root{ --radius:14px }
+    html,body{ margin:0; font-family:system-ui,Arial }
+    .widget{ position:relative; width:360px; height:520px; border-radius:var(--radius); overflow:hidden;
+      border:1px solid #e5e7eb; box-shadow:0 12px 30px rgba(0,0,0,.15); background:#fff }
+    .topbar{ display:flex; align-items:center; gap:8px; padding:10px 12px; border-bottom:1px solid #eef2f7 }
+    .title{ font-weight:700; font-size:14px }
+    .btn{ padding:6px 10px; border-radius:999px; border:1px solid #e5e7eb; background:#fff; cursor:pointer; font-weight:600; font-size:12px }
+    .row{ display:grid; grid-template-columns:1fr; gap:8px; padding:8px 12px; border-bottom:1px solid #eef2f7 }
+    .row label{ font-size:12px; color:#475569 }
+    .row select{ width:100%; padding:10px; border:1px solid #e5e7eb; border-radius:10px; font-size:14px }
+    .map{ width:100%; height:calc(100% - 140px); position:relative; }
+    .map::after{ content:''; position:absolute; bottom:0; right:0; width:80px; height:30px; pointer-events:none; }
+    .toast{ position:absolute; left:12px; bottom:12px; background:#111; color:#fff; font-size:12px; padding:8px 10px; border-radius:10px; opacity:.92; display:none; z-index:10; }
+
+    .chip{ display:inline-block; padding:2px 8px; border-radius:999px; background:#eef2ff; color:#3730a3; font-size:12px }
+    .controls-right{ display:flex; gap:6px; flex-wrap:wrap }
+
+    /* Collapse directions panel */
+    .dir-collapsed .mapbox-directions-instructions { display:none !important; }
+    .dir-collapsed .directions-control-instructions { display:none !important; }
+    .dir-collapsed .mapboxgl-ctrl-directions { max-height: 72px; overflow: hidden; }
+
+    /* Mini pill shown when collapsed */
+    .mini-pill {
+      position:absolute; left:12px; top:60px; z-index:12;
+      display:none; align-items:center; gap:6px;
+      background:#111; color:#fff; padding:6px 10px; border-radius:999px; font-size:12px; opacity:.92;
+      box-shadow:0 8px 20px rgba(0,0,0,.15);
+    }
+    .mini-pill button { all:unset; cursor:pointer; font-weight:700; padding-left:6px; }
+
+    /* Minimize button on the map (positioned over the directions panel) */
+    .dir-close {
+      position:absolute; top:60px; left:12px; z-index:21;
+      background:rgba(17,17,17,.85); color:#fff; border:none;
+      padding:6px 8px; border-radius:8px; cursor:pointer; font-size:12px; line-height:1;
+      box-shadow:0 4px 12px rgba(0,0,0,.2);
+    }
+  </style>
+</head>
+<body>
+  <div class="widget" id="widget">
+    <div class="topbar">
+      <div class="title">Pierce Directions <span class="chip">campus</span></div>
+      <div style="flex:1"></div>
+      <div class="controls-right">
+        <button class="btn" id="centerBtn" title="Recenter + reset origin">Center</button>
+        <button class="btn" id="toggleDirBtn" title="Hide/show turn-by-turn" style="display:none;">Minimize directions</button>
+        <button class="btn" id="useGPS" title="Use my GPS (optional)">Use my location</button>
+      </div>
+    </div>
+
+    <div class="row">
+      <div>
+        <label>Destination (club)</label>
+        <select id="dest">
+          <option value="">— Select destination —</option>
+          <option value="-118.57012,34.18987">TECH Club</option>
+          <option value="-118.57110,34.18940">SHEP</option>
+          <option value="-118.56990,34.18860">Pierce Science Journal Club</option>
+        </select>
+      </div>
+    </div>
+
+    <div id="map" class="map"></div>
+    <div class="toast" id="toast"></div>
+
+    <!-- Mini pill appears when directions are collapsed -->
+    <div class="mini-pill" id="miniPill">
+      Directions hidden
+      <button id="showDirFromPill">Show</button>
+    </div>
+  </div>
+
+  <script src="https://api.mapbox.com/mapbox-gl-js/v3.4.0/mapbox-gl.js"></script>
+  <script src="https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-directions/v4.3.1/mapbox-gl-directions.js"></script>
+  <script>
+    // Configuration
+    mapboxgl.accessToken = "pk.eyJ1IjoidmlhZ3Jhc2ZvcmJyZWFrZmFzdCIsImEiOiJjbWhxeTJoaHoxM2tiMmxvaDNrbjh1dmgxIn0.JaKfPx2vPNmv-576WH1txg";
+    const campusBounds = [[-118.59044, 34.17956], [-118.57097, 34.18811]];
+    const campusCenter = [-118.57689, 34.18469];
+    const DEFAULT_ZOOM = 16;
+    const TOAST_DURATION = 2200;
+
+    // Cache DOM elements
+    const elements = {
+      toast: document.getElementById('toast'),
+      widget: document.getElementById('widget'),
+      toggleBtn: document.getElementById('toggleDirBtn'),
+      miniPill: document.getElementById('miniPill'),
+      showFromPillBtn: document.getElementById('showDirFromPill'),
+      centerBtn: document.getElementById('centerBtn'),
+      useGPS: document.getElementById('useGPS'),
+      dest: document.getElementById('dest')
+    };
+
+    // Utilities
+    const pointInsideBounds = ([lng, lat], [[w, s], [e, n]]) => 
+      lng >= w && lng <= e && lat >= s && lat <= n;
+
+    let toastTimeout;
+    const toast = (msg) => {
+      elements.toast.textContent = msg;
+      elements.toast.style.display = 'block';
+      clearTimeout(toastTimeout);
+      toastTimeout = setTimeout(() => {
+        elements.toast.style.display = 'none';
+      }, TOAST_DURATION);
+    };
+
+    // Map initialization
+    const map = new mapboxgl.Map({
+      container: 'map',
+      style: 'mapbox://styles/mapbox/streets-v12',
+      center: campusCenter,
+      zoom: DEFAULT_ZOOM,
+      maxBounds: campusBounds,
+      pitchWithRotate: false,
+      dragRotate: false,
+      attributionControl: true
+    });
+    map.addControl(new mapboxgl.NavigationControl(), 'bottom-right');
+
+    // Directions
+    const directions = new MapboxDirections({
+      accessToken: mapboxgl.accessToken,
+      unit: 'metric',
+      profile: 'mapbox/walking',
+      controls: { profileSwitcher: false, instructions: true },
+      alternatives: true
+    });
+    map.addControl(directions, 'top-left');
+
+    // Origin marker management
+    let originMarker = null;
+    const ensureOriginMarker = (lngLat) => {
+      if (!originMarker) {
+        originMarker = new mapboxgl.Marker({ draggable: true, color: '#111' })
+          .setLngLat(lngLat)
+          .addTo(map);
+        originMarker.on('dragend', () => {
+          const ll = originMarker.getLngLat();
+          const next = [ll.lng, ll.lat];
+          if (!pointInsideBounds(next, campusBounds)) {
+            toast('Origin must stay on Pierce. Resetting.');
+            resetToCampusCenter();
+          } else {
+            directions.setOrigin(next);
+            maybeFitBoth();
+          }
+        });
+      } else {
+        originMarker.setLngLat(lngLat);
+      }
+    };
+
+    const setOrigin = (lngLat) => {
+      directions.setOrigin(lngLat);
+      ensureOriginMarker(lngLat);
+    };
+
+    // Map view helpers
+    const resetToCampusCenter = () => {
+      setOrigin(campusCenter);
+      map.setCenter(campusCenter);
+      map.setZoom(DEFAULT_ZOOM);
+      maybeFitBoth();
+    };
+
+    const setMapView = (center, zoom = DEFAULT_ZOOM) => {
+      map.setCenter(center);
+      map.setZoom(zoom);
+    };
+
+    // Destination helpers
+    const safeSetDestination = (strLngLat) => {
+      const ll = String(strLngLat).split(',').map(Number);
+      if (!pointInsideBounds(ll, campusBounds)) {
+        toast('Destination must be on Pierce campus.');
+        try {
+          directions.removeRoutes();
+        } catch (e) {}
+        showMinimize(false);
+        removePanelButton();
+        return false;
+      }
+      directions.setDestination(ll);
+      maybeFitBoth();
+      return true;
+    };
+
+    let fitBoundsTimeout;
+    const maybeFitBoth = () => {
+      clearTimeout(fitBoundsTimeout);
+      fitBoundsTimeout = setTimeout(() => {
+        const dest = directions.getDestination?.();
+        const orig = directions.getOrigin?.();
+        if (!dest || !orig) return;
+        const b = new mapboxgl.LngLatBounds();
+        b.extend(orig.geometry.coordinates);
+        b.extend(dest.geometry.coordinates);
+        // Increased bottom padding to ensure info button is visible
+        map.fitBounds(b, { padding: { top: 60, bottom: 80, left: 60, right: 60 }, maxZoom: 18, duration: 400 });
+      }, 100);
+    };
+
+    // UI state management
+    const setCollapsed = (on) => {
+      elements.widget.classList.toggle('dir-collapsed', on);
+      elements.toggleBtn.textContent = on ? 'Show directions' : 'Minimize directions';
+      elements.miniPill.style.display = on ? 'flex' : 'none';
+      map.resize();
+    };
+
+    const showMinimize = (show) => {
+      elements.toggleBtn.style.display = show ? 'inline-block' : 'none';
+    };
+
+    // Map button injection (button appears on the map, not inside the panel)
+    const injectPanelButton = () => {
+      const mapContainer = document.getElementById('map');
+      if (!mapContainer || mapContainer.querySelector('.dir-close')) return;
+      const btn = document.createElement('button');
+      btn.className = 'dir-close';
+      btn.type = 'button';
+      btn.title = 'Minimize directions';
+      btn.textContent = '⤢';
+      btn.addEventListener('click', () => setCollapsed(true));
+      mapContainer.appendChild(btn);
+    };
+
+    const removePanelButton = () => {
+      const btn = document.querySelector('#map .dir-close');
+      btn?.remove();
+    };
+
+    const clearRoutes = () => {
+      try {
+        directions.removeRoutes();
+      } catch (e) {}
+      showMinimize(false);
+      setCollapsed(false);
+      removePanelButton();
+    };
+
+    // Event handlers
+    elements.toggleBtn.addEventListener('click', () => {
+      setCollapsed(!elements.widget.classList.contains('dir-collapsed'));
+    });
+
+    elements.showFromPillBtn.addEventListener('click', () => setCollapsed(false));
+
+    elements.centerBtn.addEventListener('click', resetToCampusCenter);
+
+    elements.useGPS.addEventListener('click', () => {
+      if (!navigator.geolocation) {
+        toast('Geolocation not supported.');
+        return;
+      }
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          const here = [pos.coords.longitude, pos.coords.latitude];
+          if (!pointInsideBounds(here, campusBounds)) {
+            toast('Off campus. Using campus center.');
+            resetToCampusCenter();
+          } else {
+            setOrigin(here);
+            setMapView(here);
+            maybeFitBoth();
+          }
+        },
+        () => {
+          toast('Location denied. Using campus center.');
+          resetToCampusCenter();
+        },
+        { enableHighAccuracy: true, timeout: 6000 }
+      );
+    });
+
+    elements.dest.addEventListener('change', (e) => {
+      const v = e.target.value;
+      if (!v) {
+        clearRoutes();
+        return;
+      }
+      const ok = safeSetDestination(v);
+      showMinimize(ok);
+      if (ok) injectPanelButton();
+    });
+
+    // Directions events
+    directions.on('route', () => {
+      showMinimize(true);
+      injectPanelButton();
+    });
+    directions.on('clear', clearRoutes);
+
+    // Ensure info button is visible after map loads
+    map.on('load', () => {
+      setMapView(campusCenter);
+      setOrigin(campusCenter);
+      showMinimize(false);
+      setCollapsed(false);
+      removePanelButton();
+      
+      // Adjust map padding to ensure attribution/info button is visible
+      const attributionControl = document.querySelector('.mapboxgl-ctrl-attrib');
+      if (attributionControl) {
+        // Ensure the control has proper positioning
+        map.resize();
+      }
+    });
+
+    // Adjust padding when map is resized
+    map.on('resize', () => {
+      // Ensure info button remains visible after resize
+      map.resize();
+    });
+  </script>
+</body>
+</html>
