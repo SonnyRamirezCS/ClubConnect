@@ -31,7 +31,7 @@
 
     /* Mini pill shown when collapsed */
     .mini-pill {
-      position:absolute; left:12px; top: 50px; z-index:3;
+      position:absolute; left:12px; top: 200px; z-index:3;
       display:none; align-items:center; gap:6px;
       background:#111; color:#fff; padding:6px 10px; border-radius:999px; font-size:12px; opacity:.92;
       box-shadow:0 8px 20px rgba(0,0,0,.15);
@@ -40,10 +40,18 @@
 
     /* Minimize button on the map (positioned over the directions panel) */
     .dir-close {
-      position:absolute; top:60px; left:12px; z-index:21;
+      position:absolute; top:20px; left:280px; z-index:21;
       background:rgba(17,17,17,.85); color:#fff; border:none;
       padding:6px 8px; border-radius:8px; cursor:pointer; font-size:12px; line-height:1;
       box-shadow:0 4px 12px rgba(0,0,0,.2);
+    }
+    
+    /* Hide default MapboxDirections input fields and markers */
+    .mapbox-directions-component-keyline {
+      display: none !important;
+    }
+    .mapbox-directions-waypoint {
+      display: none !important;
     }
   </style>
 </head>
@@ -53,6 +61,8 @@
       <div class="title">Pierce Directions <span class="chip">campus</span></div>
       <div style="flex:1"></div>
       <div class="controls-right">
+        <button class="btn" id="clearA" title="Clear origin (A)" style="display:none;">Clear A</button>
+        <button class="btn" id="clearB" title="Clear destination (B)" style="display:none;">Clear B</button>
         <button class="btn" id="centerBtn" title="Recenter + reset origin">Center</button>
         <button class="btn" id="toggleDirBtn" title="Hide/show turn-by-turn" style="display:none;">Minimize directions</button>
         <button class="btn" id="useGPS" title="Use my GPS (optional)">Use my location</button>
@@ -100,7 +110,9 @@
       showFromPillBtn: document.getElementById('showDirFromPill'),
       centerBtn: document.getElementById('centerBtn'),
       useGPS: document.getElementById('useGPS'),
-      dest: document.getElementById('dest')
+      dest: document.getElementById('dest'),
+      clearA: document.getElementById('clearA'),
+      clearB: document.getElementById('clearB')
     };
 
     // Utilities
@@ -139,15 +151,53 @@
       alternatives: true
     });
     map.addControl(directions, 'top-left');
+    
+    // Hide default MapboxDirections markers (we'll use custom draggable ones)
+    directions.on('load', () => {
+      const dirControl = document.querySelector('.mapboxgl-ctrl-directions');
+      if (dirControl) {
+        // Hide the default origin/destination inputs and markers
+        const inputs = dirControl.querySelectorAll('.mapbox-directions-component-keyline input');
+        inputs.forEach(input => {
+          const parent = input.closest('.mapbox-directions-component-keyline');
+          if (parent) parent.style.display = 'none';
+        });
+      }
+    });
 
-    // Origin marker management
+    // Origin marker management (A)
     let originMarker = null;
     const ensureOriginMarker = (lngLat) => {
       if (!originMarker) {
-        originMarker = new mapboxgl.Marker({ draggable: true, color: '#111' })
+        // Create custom marker element with label "A"
+        const el = document.createElement('div');
+        el.className = 'custom-marker-a';
+        el.style.width = '32px';
+        el.style.height = '32px';
+        el.style.borderRadius = '50%';
+        el.style.backgroundColor = '#111';
+        el.style.border = '3px solid #fff';
+        el.style.boxShadow = '0 2px 8px rgba(0,0,0,0.3)';
+        el.style.display = 'flex';
+        el.style.alignItems = 'center';
+        el.style.justifyContent = 'center';
+        el.style.color = '#fff';
+        el.style.fontWeight = 'bold';
+        el.style.fontSize = '14px';
+        el.textContent = 'A';
+        el.style.cursor = 'grab';
+        
+        originMarker = new mapboxgl.Marker({ 
+          draggable: true, 
+          element: el 
+        })
           .setLngLat(lngLat)
           .addTo(map);
+        originMarker.on('dragstart', () => {
+          el.style.cursor = 'grabbing';
+        });
         originMarker.on('dragend', () => {
+          el.style.cursor = 'grab';
           const ll = originMarker.getLngLat();
           const next = [ll.lng, ll.lat];
           if (!pointInsideBounds(next, campusBounds)) {
@@ -158,9 +208,22 @@
             maybeFitBoth();
           }
         });
+        elements.clearA.style.display = 'inline-block';
       } else {
         originMarker.setLngLat(lngLat);
       }
+    };
+    
+    const clearOrigin = () => {
+      if (originMarker) {
+        originMarker.remove();
+        originMarker = null;
+      }
+      try {
+        directions.setOrigin(null);
+      } catch (e) {}
+      elements.clearA.style.display = 'none';
+      clearRoutes();
     };
 
     const setOrigin = (lngLat) => {
@@ -181,6 +244,71 @@
       map.setZoom(zoom);
     };
 
+    // Destination marker management (B)
+    let destinationMarker = null;
+    const ensureDestinationMarker = (lngLat) => {
+      if (!destinationMarker) {
+        // Create custom marker element with label "B"
+        const el = document.createElement('div');
+        el.className = 'custom-marker-b';
+        el.style.width = '32px';
+        el.style.height = '32px';
+        el.style.borderRadius = '50%';
+        el.style.backgroundColor = '#dc2626';
+        el.style.border = '3px solid #fff';
+        el.style.boxShadow = '0 2px 8px rgba(0,0,0,0.3)';
+        el.style.display = 'flex';
+        el.style.alignItems = 'center';
+        el.style.justifyContent = 'center';
+        el.style.color = '#fff';
+        el.style.fontWeight = 'bold';
+        el.style.fontSize = '14px';
+        el.textContent = 'B';
+        el.style.cursor = 'grab';
+        
+        destinationMarker = new mapboxgl.Marker({ 
+          draggable: true, 
+          element: el 
+        })
+          .setLngLat(lngLat)
+          .addTo(map);
+        destinationMarker.on('dragstart', () => {
+          el.style.cursor = 'grabbing';
+        });
+        destinationMarker.on('dragend', () => {
+          el.style.cursor = 'grab';
+          const ll = destinationMarker.getLngLat();
+          const next = [ll.lng, ll.lat];
+          if (!pointInsideBounds(next, campusBounds)) {
+            toast('Destination must stay on Pierce. Resetting to previous position.');
+            const dest = directions.getDestination?.();
+            if (dest) {
+              destinationMarker.setLngLat(dest.geometry.coordinates);
+            }
+          } else {
+            directions.setDestination(next);
+            maybeFitBoth();
+          }
+        });
+        elements.clearB.style.display = 'inline-block';
+      } else {
+        destinationMarker.setLngLat(lngLat);
+      }
+    };
+    
+    const clearDestination = () => {
+      if (destinationMarker) {
+        destinationMarker.remove();
+        destinationMarker = null;
+      }
+      try {
+        directions.setDestination(null);
+      } catch (e) {}
+      elements.clearB.style.display = 'none';
+      elements.dest.value = '';
+      clearRoutes();
+    };
+    
     // Destination helpers
     const safeSetDestination = (strLngLat) => {
       const ll = String(strLngLat).split(',').map(Number);
@@ -194,6 +322,7 @@
         return false;
       }
       directions.setDestination(ll);
+      ensureDestinationMarker(ll);
       maybeFitBoth();
       return true;
     };
@@ -234,7 +363,10 @@
       btn.type = 'button';
       btn.title = 'Minimize directions';
       btn.textContent = '⤢';
-      btn.addEventListener('click', () => setCollapsed(true));
+      btn.addEventListener('click', () => {
+        setCollapsed(true);
+        removePanelButton();
+      });
       mapContainer.appendChild(btn);
     };
 
@@ -251,14 +383,38 @@
       setCollapsed(false);
       removePanelButton();
     };
+    
+    // Sync markers when route is calculated
+    const syncMarkers = () => {
+      try {
+        const dest = directions.getDestination?.();
+        const orig = directions.getOrigin?.();
+        if (orig && orig.geometry) {
+          ensureOriginMarker(orig.geometry.coordinates);
+        }
+        if (dest && dest.geometry) {
+          ensureDestinationMarker(dest.geometry.coordinates);
+        }
+      } catch (e) {}
+    };
 
     // Event handlers
     elements.toggleBtn.addEventListener('click', () => {
       setCollapsed(!elements.widget.classList.contains('dir-collapsed'));
     });
 
-    elements.showFromPillBtn.addEventListener('click', () => setCollapsed(false));
+    elements.showFromPillBtn.addEventListener('click', () => {
+      setCollapsed(false);
+      // Bring back the minimize button if there's an active route
+      const dest = directions.getDestination?.();
+      if (dest && dest.geometry) {
+        injectPanelButton();
+      }
+    });
 
+    elements.clearA.addEventListener('click', clearOrigin);
+    elements.clearB.addEventListener('click', clearDestination);
+    
     elements.centerBtn.addEventListener('click', resetToCampusCenter);
 
     elements.useGPS.addEventListener('click', () => {
@@ -270,8 +426,16 @@
         (pos) => {
           const here = [pos.coords.longitude, pos.coords.latitude];
           if (!pointInsideBounds(here, campusBounds)) {
-            toast('Off campus. Using campus center.');
-            resetToCampusCenter();
+            toast('Off campus. Placing A at campus center.');
+            // Ensure A marker is set to campus center, even if it was cleared
+            setOrigin(campusCenter);
+            map.setCenter(campusCenter);
+            map.setZoom(DEFAULT_ZOOM);
+            // Only fit bounds if B marker exists
+            const dest = directions.getDestination?.();
+            if (dest && dest.geometry) {
+              maybeFitBoth();
+            }
           } else {
             setOrigin(here);
             setMapView(here);
@@ -279,8 +443,16 @@
           }
         },
         () => {
-          toast('Location denied. Using campus center.');
-          resetToCampusCenter();
+          toast('Location denied. Placing A at campus center.');
+          // Ensure A marker is set to campus center, even if it was cleared
+          setOrigin(campusCenter);
+          map.setCenter(campusCenter);
+          map.setZoom(DEFAULT_ZOOM);
+          // Only fit bounds if B marker exists
+          const dest = directions.getDestination?.();
+          if (dest && dest.geometry) {
+            maybeFitBoth();
+          }
         },
         { enableHighAccuracy: true, timeout: 6000 }
       );
@@ -289,7 +461,7 @@
     elements.dest.addEventListener('change', (e) => {
       const v = e.target.value;
       if (!v) {
-        clearRoutes();
+        clearDestination();
         return;
       }
       const ok = safeSetDestination(v);
@@ -299,10 +471,18 @@
 
     // Directions events
     directions.on('route', () => {
+      syncMarkers();
       showMinimize(true);
       injectPanelButton();
     });
-    directions.on('clear', clearRoutes);
+    directions.on('clear', () => {
+      if (destinationMarker) {
+        destinationMarker.remove();
+        destinationMarker = null;
+        elements.clearB.style.display = 'none';
+      }
+      clearRoutes();
+    });
 
     // Ensure info button is visible after map loads
     map.on('load', () => {
@@ -311,6 +491,8 @@
       showMinimize(false);
       setCollapsed(false);
       removePanelButton();
+      elements.clearA.style.display = 'inline-block';
+      elements.clearB.style.display = 'none';
       
       // Adjust map padding to ensure attribution/info button is visible
       const attributionControl = document.querySelector('.mapboxgl-ctrl-attrib');
