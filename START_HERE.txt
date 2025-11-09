@@ -1,0 +1,34 @@
+===========================================
+  CLUB CONNECT - START INSTRUCTIONS
+===========================================
+
+IMPORTANT: You must navigate to the project folder first!
+
+STEP 1: Open PowerShell or Command Prompt
+
+STEP 2: Copy and paste these commands ONE AT A TIME:
+
+cd C:\Users\kevin\Downloads\pierce-link-main\pierce-link-main
+
+npm install
+
+npm run dev
+
+STEP 3: Open your browser and go to:
+http://localhost:8080
+
+===========================================
+  TROUBLESHOOTING
+===========================================
+
+If you get "cannot find package.json":
+- Make sure you're in the correct folder
+- Check that you typed the path correctly
+- The folder should contain: package.json, src/, public/, etc.
+
+If port 8080 is in use:
+- Close any other programs using that port
+- Or change the port in vite.config.ts
+
+===========================================
+
