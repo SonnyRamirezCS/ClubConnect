@@ -31,7 +31,7 @@
 
     /* Mini pill shown when collapsed */
     .mini-pill {
-      position:absolute; left:12px; top:60px; z-index:12;
+      position:absolute; left:12px; top: 50px; z-index:3;
       display:none; align-items:center; gap:6px;
       background:#111; color:#fff; padding:6px 10px; border-radius:999px; font-size:12px; opacity:.92;
       box-shadow:0 8px 20px rgba(0,0,0,.15);
@@ -64,9 +64,9 @@
         <label>Destination (club)</label>
         <select id="dest">
           <option value="">— Select destination —</option>
-          <option value="-118.57012,34.18987">TECH Club</option>
-          <option value="-118.57110,34.18940">SHEP</option>
-          <option value="-118.56990,34.18860">Pierce Science Journal Club</option>
+          <option value="-118.57333,34.18540">TECH Club</option>
+          <option value="-118.58008,34.18465">SHEP</option>
+          <option value="-118.57958,34.18609">Pierce Science Journal Club</option>
         </select>
       </div>
     </div>
