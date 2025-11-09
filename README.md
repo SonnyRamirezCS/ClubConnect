@@ -1,72 +1,73 @@
-# Club Connect - Pierce College Clubs
+# Welcome to your Lovable project
 
-ClubConnect is a web application designed to help community college students easily discover and engage with campus clubs. The platform offers an interactive and engaging way to explore clubs through an interactive campus map, giving students instant access to information about where club meetings are held.
-For many students, finding opportunities to connect with others in their major or interests can be challenging, especially when club information is scattered or outdated.
-Our platform solves this problem by providing a centralized, efficient website where students can browse and join clubs offered at their college. ClubConnect showcases key details such as meeting times, upcoming events, contact information, and club descriptions. 
-Additionally, the app includes a convenient check-in and check-out feature that allows students to mark their attendance, making it easier for club organizers to track participation and engagement.
+## Project info
 
+**URL**: https://lovable.dev/projects/0e13e845-fd55-4e2e-a2e6-53166b510b2c
 
-## Quick Start
+## How can I edit this code?
 
-### 1. Install Dependencies (First Time Only)
-```bash
-npm install
-```
+There are several ways of editing your application.
 
-### 2. Start the Development Server
-```bash
+**Use Lovable**
+
+Simply visit the [Lovable Project](https://lovable.dev/projects/0e13e845-fd55-4e2e-a2e6-53166b510b2c) and start prompting.
+
+Changes made via Lovable will be committed automatically to this repo.
+
+**Use your preferred IDE**
+
+If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+
+The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+
+Follow these steps:
+
+```sh
+# Step 1: Clone the repository using the project's Git URL.
+git clone <YOUR_GIT_URL>
+
+# Step 2: Navigate to the project directory.
+cd <YOUR_PROJECT_NAME>
+
+# Step 3: Install the necessary dependencies.
+npm i
+
+# Step 4: Start the development server with auto-reloading and an instant preview.
 npm run dev
 ```
 
-The server will start on **http://localhost:8080**
+**Edit a file directly in GitHub**
 
-**Important:** Keep the terminal window open while the server is running!
+- Navigate to the desired file(s).
+- Click the "Edit" button (pencil icon) at the top right of the file view.
+- Make your changes and commit the changes.
 
-### 3. Access the Website
-Open your browser and go to: **http://localhost:8080**
+**Use GitHub Codespaces**
 
-## Project Structure
+- Navigate to the main page of your repository.
+- Click on the "Code" button (green button) near the top right.
+- Select the "Codespaces" tab.
+- Click on "New codespace" to launch a new Codespace environment.
+- Edit files directly within the Codespace and commit and push your changes once you're done.
 
-- `src/pages/` - Main page components (Index, Auth, Dashboard, ClubDetail, Calendar, Settings)
-- `src/components/` - Reusable components (ClubCard, SearchBar, FilterPanel, MapComponent, CheckInButton)
-- `src/integrations/supabase/` - Supabase database configuration
+## What technologies are used for this project?
 
-## Available Scripts
+This project is built with:
 
-- `npm run dev` - Start development server (port 8080)
-- `npm run build` - Build for production
-- `npm run preview` - Preview production build
-- `npm run lint` - Run ESLint
+- Vite
+- TypeScript
+- React
+- shadcn-ui
+- Tailwind CSS
 
-## Environment Variables
+## How can I deploy this project?
 
-Make sure you have a `.env` file (or `.env.local`) with your Supabase credentials:
-```
-VITE_SUPABASE_URL=your_supabase_url
-VITE_SUPABASE_PUBLISHABLE_KEY=your_supabase_key
-VITE_SUPABASE_PROJECT_ID=your_project_id
-```
+Simply open [Lovable](https://lovable.dev/projects/0e13e845-fd55-4e2e-a2e6-53166b510b2c) and click on Share -> Publish.
 
-## Features
+## Can I connect a custom domain to my Lovable project?
 
-✅ Home page with club directory  
-✅ User authentication (Sign In/Sign Up)  
-✅ Club detail pages with maps  
-✅ Personal dashboard  
-✅ Calendar with Google Calendar sync  
-✅ Check-in/Check-out system  
-✅ Filter by major/interest  
-✅ Settings page  
+Yes, you can!
 
-## Troubleshooting
+To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
 
-**Server won't start?**
-- Make sure port 8080 is not in use
-- Run `npm install` to ensure all dependencies are installed
-
-**Connection refused?**
-- Make sure the server is running (check terminal for "VITE ready")
-- Try `http://127.0.0.1:8080` instead of `localhost:8080`
-
-**Module not found errors?**
-- Delete `node_modules` folder and run `npm install` again
+Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
