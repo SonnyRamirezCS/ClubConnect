@@ -70,3 +70,13 @@ VITE_SUPABASE_PROJECT_ID=your_project_id
 
 **Module not found errors?**
 - Delete `node_modules` folder and run `npm install` again
+
+- App: 
+<img width="2880" height="1920" alt="Screenshot 2025-11-11 141654" src="https://github.com/user-attachments/assets/0ac43350-98d0-4c09-b6a5-683d8f9ecfb2" />
+<img width="2880" height="1920" alt="Screenshot 2025-11-11 141909" src="https://github.com/user-attachments/assets/1f7cd8cc-97cb-47f6-b78c-fc0312f88cb1" />
+<img width="2880" height="1920" alt="Screenshot 2025-11-11 142002" src="https://github.com/user-attachments/assets/71b40e73-38d1-4677-8ffc-a3cea1030775" />
+<img width="2880" height="1920" alt="Screenshot 2025-11-11 142103" src="https://github.com/user-attachments/assets/2ef437ca-9f31-43a9-b5d6-db2d94b06047" />
+<img width="2880" height="1920" alt="Screenshot 2025-11-11 142236" src="https://github.com/user-attachments/assets/242fb371-3bc1-422e-acf4-40d8d7d3d2cc" />
+<img width="2880" height="1920" alt="Screenshot 2025-11-11 142708" src="https://github.com/user-attachments/assets/51e74d72-7521-4676-9c43-bbf5cd45c445" />
+<img width="2880" height="1920" alt="Screenshot 2025-11-11 142828" src="https://github.com/user-attachments/assets/5f2e44c3-9037-43f4-a662-0274416217f3" />
+<img width="2880" height="1920" alt="Screenshot 2025-11-11 142921" src="https://github.com/user-attachments/assets/baf01e53-0921-4747-9ba1-edd80f7eb80c" />
