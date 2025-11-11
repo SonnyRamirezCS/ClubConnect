@@ -71,7 +71,7 @@ VITE_SUPABASE_PROJECT_ID=your_project_id
 **Module not found errors?**
 - Delete `node_modules` folder and run `npm install` again
 
-- App: 
+## App: 
 <img width="2880" height="1920" alt="Screenshot 2025-11-11 141654" src="https://github.com/user-attachments/assets/0ac43350-98d0-4c09-b6a5-683d8f9ecfb2" />
 <img width="2880" height="1920" alt="Screenshot 2025-11-11 141909" src="https://github.com/user-attachments/assets/1f7cd8cc-97cb-47f6-b78c-fc0312f88cb1" />
 <img width="2880" height="1920" alt="Screenshot 2025-11-11 142002" src="https://github.com/user-attachments/assets/71b40e73-38d1-4677-8ffc-a3cea1030775" />
