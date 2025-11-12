@@ -5,6 +5,26 @@ For many students, finding opportunities to connect with others in their major o
 Our platform solves this problem by providing a centralized, efficient website where students can browse and join clubs offered at their college. ClubConnect showcases key details such as meeting times, upcoming events, contact information, and club descriptions. 
 Additionally, the app includes a convenient check-in and check-out feature that allows students to mark their attendance, making it easier for club organizers to track participation and engagement.
 
+## Inspiration
+The idea for ClubConnect came from our own experiences struggling to find and join clubs on campus or in our communities. We realized that while there are many opportunities out there, they’re often scattered across different websites and hard to discover. We wanted to create something that brings all those opportunities together in one interactive, easy-to-use platform. Our goal was to make connecting with others who share similar interests as simple as dropping a pin on a map. By combining real data, maps, and a clean interface, we set out to build a tool that helps people get more involved and feel more connected.
+
+## What it does
+Throughout this project, we gained valuable experience using GitHub for collaboration and version control. We also learned how to make multiple programming languages interact seamlessly—bridging HTML, JavaScript, and external APIs to create a unified product.
+
+## How we built it
+We built ClubConnect using a combination of HTML, and JavaScript, integrating Mapbox to handle map visualization and interaction. We connected our site to external data sources to pull in real information about clubs and locations. Throughout development, we used GitHub for version control and collaboration, allowing each team member to contribute to different parts of the project while keeping everything in sync.
+
+## Challenges we ran into
+We faced several challenges throughout development, including determining the correct map bounds and learning how to integrate a map into our HTML structure. Implementing drag-and-drop functionality for specific map locations also proved to be tricky. Additionally, we often overlooked small details—like adding a “Back” option on the sign-in page—which required us to revisit and revise our code. Integrating the map smoothly into our website was another significant learning experience.
+
+## Accomplishments that we're proud of
+We’re proud of successfully combining our HTML code with Mapbox to display real, live data from external websites. Seeing our project come to life with interactive and dynamic map elements was a major accomplishment for our team.
+
+## What we learned
+Throughout this project, we gained valuable experience using GitHub for collaboration and version control. We also learned how to make multiple programming languages interact seamlessly—bridging HTML, JavaScript, and external APIs to create a unified product.
+
+## What's next for ClubConnect
+Our next goal is to expand ClubConnect’s reach and improve its design. We plan to add more widgets and visual features to enhance usability and polish the overall user experience.
 
 ## Quick Start
 
